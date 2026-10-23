@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="app">
-<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.2.1</div></header>
+<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.2.2</div></header>
 <main>
 <section class="screen active" data-stage="0" aria-label="背景を選ぶ">
   <div class="step">01 / 03 · BACKGROUND</div>
@@ -72,11 +72,23 @@
   <h1>撮影できた！</h1>
   <p class="sub">今の1枚を確認してみよう。<br>撮影前に完成構図が分かる体験はどうだった？</p>
   <div class="stage-preview finished" id="result-container"><img class="result-img" id="result-image" alt="撮影した写真"/></div>
-  <p id="result-status" class="notice" role="status"></p><div class="actions"><button class="primary" id="save-result">↓ 写真を保存</button><button class="secondary" id="another-shot">↻ 別の構図でも撮る</button><button class="tertiary" id="restart">最初から</button></div>
-  <p class="notice">写真にガイドは入りません。保存後は端末側で写真への保存を選んでください。</p>
+  <p id="result-status" class="notice" role="status"></p><div class="actions"><button class="primary" id="save-result">写真アプリへ保存 →</button><button class="secondary" id="another-shot">↻ 別の構図でも撮る</button><button class="tertiary" id="restart">最初から</button></div>
+  <p class="notice">写真にガイドは入りません。iPhoneでは保存画面で画像を長押しし、「写真に保存」を選んでください。</p>
 </section>
 </main>
 <div class="footer-note">miru. — 写真のうまさに、頼らない。<br>テンプレート構図・写真の外部送信なし／AI分析なし</div>
+</div>
+<div id="photo-save-panel" class="photo-save-panel" role="dialog" aria-modal="true" aria-labelledby="photo-save-title" hidden>
+  <div class="photo-save-sheet">
+    <h2 id="photo-save-title">写真アプリに保存しよう</h2>
+    <p class="photo-save-instruction"><strong>画像を長押し</strong>して「写真に保存」または「写真に追加」を選んでね。</p>
+    <img id="photo-save-image" class="photo-save-image" alt="撮影写真。長押しでiPhoneの写真アプリに保存できます">
+    <div class="twobtn">
+      <button class="secondary" id="share-photo" type="button">共有メニュー</button>
+      <button class="secondary" id="close-photo-save" type="button">撮影画面へ戻る</button>
+    </div>
+    <p class="notice">Safariの仕様により、Webサイトから写真アプリへ無確認で直接保存はできません。</p>
+  </div>
 </div>
 <div id="flash"></div><div id="alert" role="status" aria-live="polite"></div>
 <template id="figure-template"><svg viewBox="0 0 240 620" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

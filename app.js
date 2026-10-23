@@ -68,15 +68,49 @@ $('native-capture').onchange=async e=>{
   try {if(file.size>25*1024*1024)throw new Error();const image=await loadImage(url);showResult(await photoBlob(image,state.ratio),true);}
   catch{toast('写真を開けません。25MB以下のJPEG・PNGなどをお試しください');}finally{URL.revokeObjectURL(url);}
 };
-$('save-result').onclick=async()=>{
-  if(!state.resultBlob)return;
-  const file=new File([state.resultBlob],'miru-photo.jpg',{type:'image/jpeg'});
-  if(navigator.canShare?.({files:[file]})) {
-    try {await navigator.share({files:[file]});return;}catch(e){if(e.name==='AbortError')return;}
+// iOS Safari does not offer a reliable website API for saving directly to Photos.
+// Present the real image in the page: long-press opens Safari's Save to Photos action.
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function openPhotosPanel() {
+  if (!state.result) return;
+  $('photo-save-image').src = state.result;
+  $('photo-save-panel').hidden = false;
+  $('close-photo-save').focus();
+}
+function closePhotosPanel() {
+  $('photo-save-panel').hidden = true;
+  $('save-result').focus();
+}
+async function shareOrDownloadResult() {
+  if (!state.resultBlob) return;
+  const file = new File([state.resultBlob], 'miru-photo.jpg', {type:'image/jpeg'});
+  if (navigator.share && navigator.canShare?.({files:[file]})) {
+    try {await navigator.share({files:[file]});return;}
+    catch(e) {if(e.name==='AbortError')return;}
   }
-  const a=document.createElement('a');a.href=state.result;a.download=file.name;a.click();
-  $('result-status').textContent='保存を開始しました。保存先はブラウザのダウンロードをご確認ください。写真は長押しでも保存できます。';
+  if (isIOS) {
+    $('photo-save-panel').hidden = false;
+    toast('写真を長押しして「写真に保存」を選んでね');
+    return;
+  }
+  const a=document.createElement('a');
+  a.href=state.result; a.download=file.name; a.click();
+  $('result-status').textContent='画像のダウンロードを開始しました。';
+}
+$('save-result').onclick=()=>{
+  if (!state.resultBlob) return;
+  if (isIOS) openPhotosPanel();
+  else shareOrDownloadResult();
 };
+$('share-photo').onclick=shareOrDownloadResult;
+$('close-photo-save').onclick=closePhotosPanel;
+$('photo-save-panel').addEventListener('click', e=>{
+  if(e.target === $('photo-save-panel'))closePhotosPanel();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && !$('photo-save-panel').hidden)closePhotosPanel();
+});
 $('save-concept').onclick=async()=>{
   try {
     const bg=await loadImage(state.bg), blob=await photoBlob(bg,state.ratio), url=URL.createObjectURL(blob), image=await loadImage(url);
