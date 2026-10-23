@@ -62,3 +62,12 @@ p.sub { margin:8px 0 18px; color:var(--muted); font-size:12.5px; line-height:1.7
 @media (prefers-reduced-motion:reduce) {*{animation:none!important;transition:none!important}}
 
 #scene-camera{z-index:1} .guide-controls{margin-top:12px} button:disabled{opacity:.55;cursor:wait} button,.file-button{min-height:44px} .app{padding-bottom:env(safe-area-inset-bottom)} .model-holder{pointer-events:none} .camera-view{transform:none} #cam-note{min-height:34px}
+
+/* iPhone Photos save help: keep the actual <img> long-pressable by Safari. */
+.photo-save-panel[hidden] {display:none}
+.photo-save-panel {position:fixed;inset:0;z-index:1100;background:#211b1bd9;display:flex;align-items:center;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.photo-save-sheet {width:min(100%,430px);max-height:95dvh;overflow:auto;background:var(--paper);border-radius:22px;padding:20px;text-align:center;box-shadow:0 12px 45px #0004}
+.photo-save-sheet h2 {font-size:20px;letter-spacing:-.04em;margin:0 0 8px}
+.photo-save-instruction {font-size:13px;color:#6f5750;line-height:1.6;margin:0 0 12px}
+.photo-save-image {display:block;width:auto;max-width:100%;max-height:58dvh;object-fit:contain;margin:0 auto 14px;border-radius:12px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.photo-save-sheet .twobtn {margin-top:12px}
