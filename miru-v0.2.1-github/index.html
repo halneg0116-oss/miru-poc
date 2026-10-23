@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#faf8f5" />
+<title>miru. — 撮る前に、見えるカメラ｜UX試作</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.2.1</div></header>
+<main>
+<section class="screen active" data-stage="0" aria-label="背景を選ぶ">
+  <div class="step">01 / 03 · BACKGROUND</div>
+  <h1>まず、この景色から。</h1>
+  <p class="sub">写真を撮る場所を決めるだけ。<br>背景に人物素材を重ねて、構図を選ぼう。</p>
+  <div class="stage-preview scene"><video id="scene-camera" class="camera-view backcam" playsinline autoplay muted></video><img class="bg-img" id="bg-first" alt="撮影する背景"/><div class="image-vignette"></div><div class="overlay-label" id="scene-label">サンプル背景</div></div>
+  <p id="scene-status" class="notice" role="status"></p><button class="secondary" id="start-scene-camera">カメラで背景を見る</button><div class="actions">
+    <button class="primary" id="choose-scene">この景色でイメージを見る →</button>
+    <div class="twobtn">
+      <label class="secondary file-button">📷 背景を撮る<input id="input-camera-bg" type="file" accept="image/*" capture="environment"></label>
+      <label class="secondary file-button">▧ 写真を選ぶ<input id="input-file-bg" type="file" accept="image/*"></label>
+    </div>
+  </div>
+  <button class="tertiary" id="normal-from-scene">通常撮影へスキップ</button><p class="notice">写真は端末内だけで使用。サーバーに送信しません。</p>
+</section>
+<section class="screen" data-stage="1" aria-label="完成イメージを選ぶ">
+  <div class="step">02 / 03 · PREVIEW</div>
+  <h1>こんな1枚、どう？</h1>
+  <p class="sub">背景に人物のイメージを重ねたよ。<br>気に入った構図を選んでね。</p>
+  <div class="stage-preview composite" id="preview-container">
+    <img class="bg-img" id="bg-preview" alt="完成イメージの背景" />
+    <div class="model-holder" id="person-preview"></div>
+    <div class="image-vignette"></div>
+    <div class="overlay-label">完成構図のイメージ</div>
+    <div class="overlay-label topright" id="preview-ratio-label">4:5</div>
+  </div>
+  <div class="style-strip" role="group" aria-label="写真の構図">
+    <button class="style-option selected" data-style="0" aria-pressed="true">背景重視<small>おすすめ ✦</small></button>
+    <button class="style-option" data-style="1" aria-pressed="false">全身<small>人物メイン</small></button>
+    <button class="style-option" data-style="2" aria-pressed="false">寄り<small>自然な雰囲気</small></button>
+  </div>
+  <div class="ratio-row"><span>載せる場所</span><div class="ratio-chips" role="group" aria-label="画像の比率"><button data-ratio="4/5" class="sel" aria-pressed="true">投稿 4:5</button><button data-ratio="9/16" aria-pressed="false">Story 9:16</button><button data-ratio="1/1" aria-pressed="false">正方形 1:1</button></div></div>
+  <div class="actions">
+    <button class="tertiary" id="normal-shoot">ガイドなしで通常撮影</button><button class="primary" id="use-plan">この構図で撮る →</button>
+    <div class="twobtn"><button class="secondary" id="save-concept">↓ プラン画像を保存</button><button class="secondary" id="back-scene">← 背景を変える</button></div>
+  </div>
+  <p class="notice">人物はイラスト素材による仮配置。実際の写真の完成予測ではありません。</p>
+</section>
+<section class="screen" data-stage="2" aria-label="撮影ガイド">
+  <div class="step">03 / 03 · SHOOT</div>
+  <h1>あとは、合わせて撮る。</h1>
+  <p class="sub">お手本を相手に見せたらスマホを渡そう。<br>撮る人はガイドを目印にするだけ。</p>
+  <div class="stage-preview guide" id="guide-container">
+    <img class="bg-img" id="bg-guide" alt="撮影する背景" />
+    <video id="camera-view" class="camera-view backcam" playsinline autoplay muted></video>
+    <div class="model-holder guide-model" id="person-guide"></div>
+    <div class="image-vignette"></div>
+    <div class="overlay-label" id="guide-label">半透明ガイド</div>
+    <div class="chip-hint" id="guide-hint">人物をガイドに合わせてね</div>
+  </div>
+  <div class="twobtn guide-controls"><button class="secondary" id="toggle-guide">ガイドをオフ</button><button class="secondary" id="next-guide">構図を切替</button></div>
+  <div class="actions">
+    <button class="primary" id="camera-action">カメラを起動する →</button>
+    <div class="twobtn"><label class="secondary file-button">📸 標準カメラで撮る<input id="native-capture" type="file" accept="image/*" capture="environment"></label><button class="secondary" id="back-preview">← イメージに戻る</button></div>
+  </div>
+  <p class="notice" id="cam-note">ブラウザや開き方によってはカメラ起動が使えません。その場合は「標準カメラで撮る」を選んでね。</p>
+</section>
+<section class="screen" data-stage="3" aria-label="撮影完了">
+  <div class="step">DONE · YOUR PHOTO</div>
+  <h1>撮影できた！</h1>
+  <p class="sub">今の1枚を確認してみよう。<br>撮影前に完成構図が分かる体験はどうだった？</p>
+  <div class="stage-preview finished" id="result-container"><img class="result-img" id="result-image" alt="撮影した写真"/></div>
+  <p id="result-status" class="notice" role="status"></p><div class="actions"><button class="primary" id="save-result">↓ 写真を保存</button><button class="secondary" id="another-shot">↻ 別の構図でも撮る</button><button class="tertiary" id="restart">最初から</button></div>
+  <p class="notice">写真にガイドは入りません。保存後は端末側で写真への保存を選んでください。</p>
+</section>
+</main>
+<div class="footer-note">miru. — 写真のうまさに、頼らない。<br>テンプレート構図・写真の外部送信なし／AI分析なし</div>
+</div>
+<div id="flash"></div><div id="alert" role="status" aria-live="polite"></div>
+<template id="figure-template"><svg viewBox="0 0 240 620" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs><linearGradient id="sweat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eee7de"/><stop offset="1" stop-color="#d9cfc4"/></linearGradient><linearGradient id="denim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#405260"/><stop offset="1" stop-color="#26394b"/></linearGradient></defs>
+<ellipse cx="127" cy="605" rx="77" ry="12" fill="#1c2d3948" />
+<!-- long trousers and shoes -->
+<path d="M84 315 Q112 303 142 317 L160 430 161 578 128 578 109 420 105 405 100 574 70 573 73 435Z" fill="url(#denim)"/>
+<path d="M68 563 Q74 574 98 570 L113 593 Q117 607 101 609 L59 606 Q52 595 59 583Z" fill="#ebe8df"/>
+<path d="M127 570 Q141 578 162 573 L180 598 Q179 611 164 611 L123 607 Q117 595 121 587Z" fill="#eeece5"/>
+<path d="M58 597 L110 597 M124 600 L177 601" stroke="#8d8580" stroke-width="3"/>
+<!-- arms -->
+<path d="M83 174 Q67 178 54 207 L33 299 42 343 Q45 352 53 348 L59 340 54 314 74 250 91 223Z" fill="#dec0a8"/>
+<path d="M155 177 Q175 172 186 206 L202 292 189 341 177 338 184 288 164 239 152 224Z" fill="#d8b397"/>
+<!-- overshirt -->
+<path d="M91 169 Q110 161 123 168 L151 171 176 225 158 334 83 338 61 225Z" fill="url(#sweat)"/>
+<path d="M120 169 L121 331" stroke="#b7aea7" stroke-width="3"/>
+<path d="M87 180 Q97 223 104 264 M158 178 Q152 220 143 258" fill="none" stroke="#ffffff80" stroke-width="3"/>
+<!-- neckline / skin -->
+<path d="M104 145 L104 175 Q118 188 134 175 L132 141Z" fill="#dab196"/>
+<path d="M102 172 Q120 194 139 172" fill="#f4ede5"/>
+<!-- hair behind -->
+<path d="M92 90 Q89 48 126 47 Q161 52 155 106 L167 172 Q148 190 136 173 L97 177 Q82 159 90 138Z" fill="#292525"/>
+<!-- face -->
+<path d="M101 89 Q117 73 145 90 L147 126 Q147 146 125 159 Q107 153 99 133Z" fill="#e4bea3"/>
+<!-- hair fringe -->
+<path d="M96 105 Q85 54 123 52 Q146 44 154 72 Q154 92 149 108 Q145 94 139 78 Q128 95 99 105Z" fill="#322923"/>
+<path d="M101 111 Q99 134 104 143 Q92 139 90 128Z" fill="#322923"/>
+<path d="M144 105 Q148 127 142 142 Q154 138 158 128 L154 93Z" fill="#322923"/>
+<!-- face minimal -->
+<path d="M111 119 L117 119 M135 117 L140 115" stroke="#5f4b47" stroke-width="2.7" stroke-linecap="round"/>
+<path d="M125 123 L123 132 127 134" stroke="#c5927f" fill="none" stroke-width="2"/>
+<path d="M117 141 Q125 146 132 139" stroke="#a96461" fill="none" stroke-width="2.3" stroke-linecap="round"/>
+<!-- handbag -->
+<path d="M45 329 Q28 344 28 373 L60 383 Q69 359 55 329Z" fill="#9d634c"/>
+<path d="M42 333 Q28 295 47 282" stroke="#966b55" stroke-width="6" fill="none"/>
+</svg></template>
+<script type="module" src="app.js"></script>
+</body>
+</html>
