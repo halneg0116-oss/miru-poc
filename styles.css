@@ -71,3 +71,6 @@ p.sub { margin:8px 0 18px; color:var(--muted); font-size:12.5px; line-height:1.7
 .photo-save-instruction {font-size:13px;color:#6f5750;line-height:1.6;margin:0 0 12px}
 .photo-save-image {display:block;width:auto;max-width:100%;max-height:58dvh;object-fit:contain;margin:0 auto 14px;border-radius:12px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
 .photo-save-sheet .twobtn {margin-top:12px}
+/* Opt-in diagnostics never overlay the live camera. */
+#developer-debug{margin:12px 20px;padding:12px;background:#fff0ed;border:1px solid var(--line);border-radius:12px;font-size:12px}
+#developer-debug pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:50dvh;overflow:auto;font-size:11px}

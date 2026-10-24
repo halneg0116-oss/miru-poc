@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="app">
-<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.2.2</div></header>
+<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.3.0</div></header>
 <main>
 <section class="screen active" data-stage="0" aria-label="背景を選ぶ">
   <div class="step">01 / 03 · BACKGROUND</div>
@@ -23,7 +23,7 @@
       <label class="secondary file-button">▧ 写真を選ぶ<input id="input-file-bg" type="file" accept="image/*"></label>
     </div>
   </div>
-  <button class="tertiary" id="normal-from-scene">通常撮影へスキップ</button><p class="notice">写真は端末内だけで使用。サーバーに送信しません。</p>
+  <button class="tertiary" id="normal-from-scene">通常撮影へスキップ</button><p class="notice">写真は端末内だけで使用。サーバーに送信しません。初回解析時に外部からAIモデルを取得します。</p>
 </section>
 <section class="screen" data-stage="1" aria-label="完成イメージを選ぶ">
   <div class="step">02 / 03 · PREVIEW</div>
@@ -36,7 +36,7 @@
     <div class="overlay-label">完成構図のイメージ</div>
     <div class="overlay-label topright" id="preview-ratio-label">4:5</div>
   </div>
-  <div class="style-strip" role="group" aria-label="写真の構図">
+  <p id="scene-analysis-status" class="notice" role="status"></p><p id="ai-plan-note" class="notice"></p><div class="style-strip" role="group" aria-label="写真の構図">
     <button class="style-option selected" data-style="0" aria-pressed="true">背景重視<small>おすすめ ✦</small></button>
     <button class="style-option" data-style="1" aria-pressed="false">全身<small>人物メイン</small></button>
     <button class="style-option" data-style="2" aria-pressed="false">寄り<small>自然な雰囲気</small></button>
@@ -76,7 +76,7 @@
   <p class="notice">写真にガイドは入りません。iPhoneでは保存画面で画像を長押しし、「写真に保存」を選んでください。</p>
 </section>
 </main>
-<div class="footer-note">miru. — 写真のうまさに、頼らない。<br>テンプレート構図・写真の外部送信なし／AI分析なし</div>
+<div class="footer-note">miru. — 写真のうまさに、頼らない。<br>端末内AI構図・写真の外部送信なし</div>
 </div>
 <div id="photo-save-panel" class="photo-save-panel" role="dialog" aria-modal="true" aria-labelledby="photo-save-title" hidden>
   <div class="photo-save-sheet">
