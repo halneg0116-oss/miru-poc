@@ -1,8 +1,8 @@
 // Single-image, on-device analysis. MediaPipe fetches code/WASM/model from a CDN,
 // but image pixels are processed locally; no photo is uploaded by miru.
-const VERSION = '0.10.22';
+const VERSION = '1.1.1';
 const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + VERSION;
-const MODEL = 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite';
+const MODEL = 'https://storage.googleapis.com/mediapipe-tasks/object_detector/efficientdet_lite0_uint8.tflite';
 let detectorPromise;
 async function detector() {
   if (!detectorPromise) {
