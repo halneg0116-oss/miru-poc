@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="app">
-<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.2.2</div></header>
+<header><div class="logo">miru<span>.</span></div><div class="proto">UX PROTOTYPE · v0.3.0</div></header>
 <main>
 <section class="screen active" data-stage="0" aria-label="背景を選ぶ">
   <div class="step">01 / 03 · BACKGROUND</div>
@@ -36,7 +36,7 @@
     <div class="overlay-label">完成構図のイメージ</div>
     <div class="overlay-label topright" id="preview-ratio-label">4:5</div>
   </div>
-  <div class="style-strip" role="group" aria-label="写真の構図">
+  <p id="scene-analysis-status" class="notice" role="status"></p><p id="ai-plan-note" class="notice"></p><div class="style-strip" role="group" aria-label="写真の構図">
     <button class="style-option selected" data-style="0" aria-pressed="true">背景重視<small>おすすめ ✦</small></button>
     <button class="style-option" data-style="1" aria-pressed="false">全身<small>人物メイン</small></button>
     <button class="style-option" data-style="2" aria-pressed="false">寄り<small>自然な雰囲気</small></button>
