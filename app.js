@@ -1,3 +1,4 @@
+import {createDebugMode} from './debug-mode.js';
 import {presets} from './presets.js';
 import {analyzeScene} from './scene-analyzer.js';
 import {buildShotPlans} from './shot-planner.js';
@@ -9,9 +10,12 @@ const camera = new Camera();
 const state = {stage:0, bg:'assets/scene.jpg', sample:true, style:0, ratio:'4/5', guide:true, result:null, resultBlob:null};
 let importToken = 0;
 let analyzedScene=null, plans=null, analysisToken=0;
-let analysisSource='fixed';
+let analysisSource='fixed', analysisError=null, analysisStatus='idle';
+const renderDebug=createDebugMode(new URLSearchParams(location.search).get('debug')==='1');
+function cancelAnalysis() {++analysisToken;if(analysisStatus==='loading'){analysisStatus='cancelled';$('scene-analysis-status').textContent='解析を中断しました。固定構図で続行できます';}}
 async function refreshPlans() {
   const token=++analysisToken;
+  analysisStatus='loading';analysisError=null;analyzedScene=null;plans=null;analysisSource='fixed';layout();
   $('scene-analysis-status').textContent='背景を分析しています…';
   try {
     const img=await loadImage(state.bg);
@@ -21,16 +25,16 @@ async function refreshPlans() {
     });
     if(token!==analysisToken)return;
     analyzedScene=result;
-    analysisSource='ai';
+    analysisSource='ai';analysisStatus='complete';
     plans=buildShotPlans(result,state.ratio);
     $('scene-analysis-status').textContent='端末内AIで解析完了 · '+result.objects.length+'件検出 · '+result.inferenceMs+'ms';
   }catch(error){
     if(token!==analysisToken)return;
-    analyzedScene=null;plans=null;analysisSource='fixed';
+    analyzedScene=null;plans=null;analysisSource='fixed';analysisStatus='error';analysisError=error;
     $('scene-analysis-status').textContent='AI解析を利用できないため固定構図で続行できます';
     console.warn('miru scene analysis unavailable',error);
   }
-  state.style=0;layout();
+  layout();
 }
 function currentPlans(){return plans||presets;}
 function poseFor(p){return poseMarkup(p.pose||'stand',figure);}
@@ -39,7 +43,7 @@ const figure = $('figure-template').innerHTML;
 ['person-preview','person-guide'].forEach(id => $(id).innerHTML = figure);
 function toast(message) { $('alert').textContent=message; $('alert').classList.add('show'); clearTimeout(toast.timer); toast.timer=setTimeout(()=>$('alert').classList.remove('show'),3500); }
 function stop() {camera.stop(); $('camera-action').textContent='カメラを起動する →'; $('start-scene-camera').textContent='カメラで背景を見る';}
-function go(stage) {stop(); state.stage=stage; document.querySelectorAll('.screen').forEach((screen,i)=>screen.classList.toggle('active',i===stage)); layout(); window.scrollTo(0,0);}
+function go(stage) {if(stage!==1)cancelAnalysis();stop(); state.stage=stage; document.querySelectorAll('.screen').forEach((screen,i)=>screen.classList.toggle('active',i===stage)); layout(); window.scrollTo(0,0);}
 function layout() {
   ['bg-first','bg-preview','bg-guide'].forEach(id=>$(id).src=state.bg);
   $('scene-label').textContent=camera.stream && state.stage===0?'背景を映しています':state.sample?'サンプル背景':'あなたの背景写真';
@@ -60,8 +64,9 @@ function layout() {
   const [rw,rh]=state.ratio.split('/').map(Number), w=Math.min(document.querySelector('.app').clientWidth-40,window.innerHeight*.50*rw/rh);
   ['preview-container','guide-container','result-container'].forEach(id=>Object.assign($(id).style,{aspectRatio:state.ratio,width:w+'px',maxHeight:'none'}));
   $('preview-ratio-label').textContent=state.ratio.replace('/',':');
+  renderDebug({stage:state.stage,scene:analyzedScene,plans:currentPlans(),ratio:state.ratio,style:state.style,source:analysisSource,error:analysisError,status:analysisStatus});
 }
-function replaceBg(url) { analyzedScene=null;plans=null;analysisSource='fixed';++analysisToken; if(state.bg.startsWith('blob:')) URL.revokeObjectURL(state.bg);state.bg=url;state.sample=false;layout();}
+function replaceBg(url) { analyzedScene=null;plans=null;analysisSource='fixed';analysisStatus='idle';analysisError=null;$('scene-analysis-status').textContent='';++analysisToken; if(state.bg.startsWith('blob:')) URL.revokeObjectURL(state.bg);state.bg=url;state.sample=false;layout();}
 async function pickBackground(e) {
   const file=e.target.files?.[0];e.target.value='';if(!file)return;
   const token=++importToken;
@@ -149,13 +154,14 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape' && !$('photo-save-panel').hidden)closePhotosPanel();
 });
 $('save-concept').onclick=async()=>{
+  const ratio=state.ratio, plan={...currentPlans()[state.style]}, background=state.bg;
   try {
-    const bg=await loadImage(state.bg), blob=await photoBlob(bg,state.ratio), url=URL.createObjectURL(blob), image=await loadImage(url);
+    const bg=await loadImage(background), blob=await photoBlob(bg,ratio), url=URL.createObjectURL(blob), image=await loadImage(url);
     const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
     const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);URL.revokeObjectURL(url);
-    const figureUrl=URL.createObjectURL(new Blob([poseFor(currentPlans()[state.style]).trim()],{type:'image/svg+xml'}));
+    const figureUrl=URL.createObjectURL(new Blob([poseFor(plan).trim()],{type:'image/svg+xml'}));
     let person;try {person=await loadImage(figureUrl);}finally{URL.revokeObjectURL(figureUrl);}
-    const p=currentPlans()[state.style], h=canvas.height*p.height/100,w=h*240/620;
+    const p=plan, h=canvas.height*p.height/100,w=h*240/620;
     ctx.drawImage(person,canvas.width*p.x/100-w/2,canvas.height*(1-p.bottom/100)-h,w,h);
     ctx.fillStyle='white';ctx.fillRect(8,canvas.height-30,220,24);ctx.fillStyle='#554b47';ctx.font='14px sans-serif';ctx.fillText('miru. · テンプレート構図イメージ',14,canvas.height-13);
     canvas.toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='miru-composition.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),60000);});

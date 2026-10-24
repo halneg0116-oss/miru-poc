@@ -1,22 +1,18 @@
+import {createDetectorLoader} from './detector-loader.js';
 // Single-image, on-device analysis. MediaPipe fetches code/WASM/model from a CDN,
 // but image pixels are processed locally; no photo is uploaded by miru.
 const VERSION = '1.1.1';
 const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + VERSION;
 const MODEL = 'https://storage.googleapis.com/mediapipe-tasks/object_detector/efficientdet_lite0_uint8.tflite';
-let detectorPromise;
-async function detector() {
-  if (!detectorPromise) {
-    detectorPromise = (async () => {
-      const {ObjectDetector, FilesetResolver} = await import(CDN + '/vision_bundle.mjs');
-      const vision = await FilesetResolver.forVisionTasks(CDN + '/wasm');
-      return ObjectDetector.createFromOptions(vision, {
-        baseOptions: {modelAssetPath: MODEL, delegate:'CPU'},
-        scoreThreshold:0.38, maxResults:15, runningMode:'IMAGE'
-      });
-    })().catch(err => {detectorPromise=null; throw err;});
-  }
-  return detectorPromise;
-}
+export const modelInfo = Object.freeze({version:VERSION, module:CDN+'/vision_bundle.mjs', wasm:CDN+'/wasm', model:MODEL, delegate:'CPU'});
+const detector = createDetectorLoader(async () => {
+  const {ObjectDetector, FilesetResolver} = await import(modelInfo.module);
+  const vision = await FilesetResolver.forVisionTasks(modelInfo.wasm);
+  return ObjectDetector.createFromOptions(vision, {
+    baseOptions:{modelAssetPath:MODEL, delegate:'CPU'},
+    scoreThreshold:0.38, maxResults:15, runningMode:'IMAGE'
+  });
+});
 function imageTexture(canvas) {
   // An inexpensive image feature, not a learned saliency model.
   const tiny=document.createElement('canvas');tiny.width=60;tiny.height=60;
@@ -40,26 +36,39 @@ function imageTexture(canvas) {
   }
   return {grid,brightness:globalLight/(60*60)};
 }
-export async function analyzeScene(image, progress=()=>{}) {
-  const sw=image.naturalWidth||image.videoWidth,sh=image.naturalHeight||image.videoHeight;
-  if(!sw||!sh)throw new Error('背景画像を読み込めません');
-  const s=Math.min(1,640/Math.max(sw,sh));
-  const canvas=document.createElement('canvas');
-  canvas.width=Math.max(1,Math.round(sw*s)); canvas.height=Math.max(1,Math.round(sh*s));
-  canvas.getContext('2d',{willReadFrequently:true}).drawImage(image,0,0,canvas.width,canvas.height);
-  const visual=imageTexture(canvas);
-  progress('端末内AIが物体を認識しています…');
-  const task=await detector();
-  const start=performance.now();
-  const result=task.detect(canvas);
-  const inferenceMs=Math.round(performance.now()-start);
-  const objects=(result.detections||[]).filter(d=>d.boundingBox && d.categories?.length).map(d=>({
-    label:d.categories[0].categoryName,
-    confidence:d.categories[0].score,
-    x:d.boundingBox.originX/canvas.width,
-    y:d.boundingBox.originY/canvas.height,
-    w:d.boundingBox.width/canvas.width,
-    h:d.boundingBox.height/canvas.height
-  }));
-  return {width:canvas.width,height:canvas.height,objects, ...visual,inferenceMs,source:'mediapipe'};
+export function createSceneAnalyzer(loadDetector = detector) {
+  return async function analyzeScene(image, progress=()=>{}) {
+    const totalStart=performance.now();
+    let phase='image', modelLoadMs=null, inferenceMs=null;
+    try {
+      const sw=image.naturalWidth||image.videoWidth,sh=image.naturalHeight||image.videoHeight;
+      if(!sw||!sh)throw new Error('背景画像を読み込めません');
+      const s=Math.min(1,640/Math.max(sw,sh));
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.max(1,Math.round(sw*s)); canvas.height=Math.max(1,Math.round(sh*s));
+      canvas.getContext('2d',{willReadFrequently:true}).drawImage(image,0,0,canvas.width,canvas.height);
+      const visual=imageTexture(canvas);
+      phase='model';progress('端末内AIのモデルを読み込んでいます…');
+      const modelStart=performance.now();
+      const task=await loadDetector();
+      modelLoadMs=Math.round(performance.now()-modelStart);
+      phase='inference';progress('端末内AIが物体を認識しています…');
+      const start=performance.now();
+      const result=task.detect(canvas);
+      inferenceMs=Math.round(performance.now()-start);
+      const objects=(result.detections||[]).filter(d=>d.boundingBox && d.categories?.length).map(d=>({
+        label:d.categories[0].categoryName,
+        confidence:d.categories[0].score,
+        x:d.boundingBox.originX/canvas.width,
+        y:d.boundingBox.originY/canvas.height,
+        w:d.boundingBox.width/canvas.width,
+        h:d.boundingBox.height/canvas.height
+      }));
+      return {width:canvas.width,height:canvas.height,objects, ...visual,inferenceMs,modelLoadMs,totalMs:Math.round(performance.now()-totalStart),source:'mediapipe'};
+    } catch(error) {
+      error.diagnostics={phase,modelLoadMs,inferenceMs,totalMs:Math.round(performance.now()-totalStart)};
+      throw error;
+    }
+  };
 }
+export const analyzeScene = createSceneAnalyzer();
